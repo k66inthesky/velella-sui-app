@@ -12,56 +12,52 @@ interface BalanceInfo {
   formattedBalance: string
 }
 
+// 使用 Promise.race 實現正確的 timeout
+async function fetchMetadataWithTimeout(coinType: string, timeoutMs: number = 3000) {
+  const metadataPromise = mainnetClient.getCoinMetadata({ coinType })
+  const timeoutPromise = new Promise<null>((resolve) => {
+    setTimeout(() => resolve(null), timeoutMs)
+  })
+  
+  // 誰先完成就用誰的結果，timeout 時返回 null
+  return Promise.race([metadataPromise, timeoutPromise])
+}
+
 async function getWalletBalance(address: string) {
   const allBalances = await mainnetClient.getAllBalances({ owner: address })
   
   let suiBalance = '0'
-  const otherBalances: typeof allBalances = []
+  const tokens: BalanceInfo[] = []
 
-  // 先分離 SUI 和其他代幣
   for (const balance of allBalances) {
     if (balance.coinType === '0x2::sui::SUI') {
       suiBalance = (Number(balance.totalBalance) / 1e9).toFixed(9)
-    } else {
-      otherBalances.push(balance)
     }
   }
 
-  // 並行查詢所有代幣的 metadata（有 5 秒 timeout）
-  const tokenPromises = otherBalances.map(async (balance) => {
-    try {
-      const metadataPromise = mainnetClient.getCoinMetadata({ coinType: balance.coinType })
-      const timeoutPromise = new Promise<null>((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), 5000)
-      )
-      
-      const metadata = await Promise.race([metadataPromise, timeoutPromise])
-      const decimals = metadata?.decimals ?? 9
-      const symbol = metadata?.symbol ?? balance.coinType.split('::').pop() || 'Unknown'
-      const rawBalance = Number(balance.totalBalance)
-      const formattedBalance = (rawBalance / Math.pow(10, decimals)).toString()
-      
-      return {
-        coinType: balance.coinType,
-        totalBalance: balance.totalBalance,
-        decimals,
-        symbol,
-        formattedBalance
-      }
-    } catch {
-      // 如果超時或失敗，使用預設值
-      const rawBalance = Number(balance.totalBalance)
-      return {
-        coinType: balance.coinType,
-        totalBalance: balance.totalBalance,
-        decimals: 9,
-        symbol: balance.coinType.split('::').pop() || 'Unknown',
-        formattedBalance: (rawBalance / 1e9).toString()
-      }
-    }
-  })
+  // 取得非 SUI 代幣並並行查詢 metadata
+  const otherBalances = allBalances.filter(b => b.coinType !== '0x2::sui::SUI')
+  
+  const metadataResults = await Promise.all(
+    otherBalances.map(b => fetchMetadataWithTimeout(b.coinType))
+  )
 
-  const tokens = await Promise.all(tokenPromises)
+  for (let i = 0; i < otherBalances.length; i++) {
+    const balance = otherBalances[i]
+    const metadata = metadataResults[i]
+    const decimals = metadata?.decimals ?? 9
+    const symbol = metadata?.symbol ?? balance.coinType.split('::').pop() ?? 'Unknown'
+    const rawBalance = Number(balance.totalBalance)
+    const formattedBalance = (rawBalance / Math.pow(10, decimals)).toString()
+    
+    tokens.push({
+      coinType: balance.coinType,
+      totalBalance: balance.totalBalance,
+      decimals,
+      symbol,
+      formattedBalance
+    })
+  }
 
   return { address, suiBalance, tokens }
 }
