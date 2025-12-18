@@ -16,37 +16,52 @@ async function getWalletBalance(address: string) {
   const allBalances = await mainnetClient.getAllBalances({ owner: address })
   
   let suiBalance = '0'
-  const tokens: BalanceInfo[] = []
+  const otherBalances: typeof allBalances = []
 
+  // 先分離 SUI 和其他代幣
   for (const balance of allBalances) {
     if (balance.coinType === '0x2::sui::SUI') {
       suiBalance = (Number(balance.totalBalance) / 1e9).toFixed(9)
     } else {
-      try {
-        const metadata = await mainnetClient.getCoinMetadata({ coinType: balance.coinType })
-        const decimals = metadata?.decimals ?? 9
-        const symbol = metadata?.symbol ?? 'Unknown'
-        const rawBalance = Number(balance.totalBalance)
-        const formattedBalance = (rawBalance / Math.pow(10, decimals)).toString()
-        
-        tokens.push({
-          coinType: balance.coinType,
-          totalBalance: balance.totalBalance,
-          decimals,
-          symbol,
-          formattedBalance
-        })
-      } catch {
-        tokens.push({
-          coinType: balance.coinType,
-          totalBalance: balance.totalBalance,
-          decimals: 9,
-          symbol: 'Unknown',
-          formattedBalance: (Number(balance.totalBalance) / 1e9).toString()
-        })
-      }
+      otherBalances.push(balance)
     }
   }
+
+  // 並行查詢所有代幣的 metadata（有 5 秒 timeout）
+  const tokenPromises = otherBalances.map(async (balance) => {
+    try {
+      const metadataPromise = mainnetClient.getCoinMetadata({ coinType: balance.coinType })
+      const timeoutPromise = new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 5000)
+      )
+      
+      const metadata = await Promise.race([metadataPromise, timeoutPromise])
+      const decimals = metadata?.decimals ?? 9
+      const symbol = metadata?.symbol ?? balance.coinType.split('::').pop() || 'Unknown'
+      const rawBalance = Number(balance.totalBalance)
+      const formattedBalance = (rawBalance / Math.pow(10, decimals)).toString()
+      
+      return {
+        coinType: balance.coinType,
+        totalBalance: balance.totalBalance,
+        decimals,
+        symbol,
+        formattedBalance
+      }
+    } catch {
+      // 如果超時或失敗，使用預設值
+      const rawBalance = Number(balance.totalBalance)
+      return {
+        coinType: balance.coinType,
+        totalBalance: balance.totalBalance,
+        decimals: 9,
+        symbol: balance.coinType.split('::').pop() || 'Unknown',
+        formattedBalance: (rawBalance / 1e9).toString()
+      }
+    }
+  })
+
+  const tokens = await Promise.all(tokenPromises)
 
   return { address, suiBalance, tokens }
 }
