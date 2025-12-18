@@ -1,0 +1,672 @@
+/* ==================== CSS Variables - Velella Ocean Theme ==================== */
+:root {
+  /* Ocean Blue Colors - inspired by Velella jellyfish */
+  --primary-color: #00b4d8;
+  --primary-light: #48cae4;
+  --primary-dark: #0096c7;
+  --secondary-color: #0077b6;
+  --accent-color: #90e0ef;
+  --accent-pink: #ff8fab;
+  
+  /* Status Colors */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  
+  /* Background - Dark Navy Ocean */
+  --bg-primary: #0a1628;
+  --bg-secondary: #0d2137;
+  --bg-tertiary: #132d46;
+  --bg-card: rgba(13, 33, 55, 0.9);
+  --bg-card-hover: rgba(19, 45, 70, 0.95);
+  
+  /* Text */
+  --text-primary: #e8f4f8;
+  --text-secondary: #90b4ce;
+  --text-muted: #5a7a94;
+  
+  /* Border */
+  --border-color: rgba(0, 180, 216, 0.25);
+  --border-glow: rgba(0, 180, 216, 0.5);
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 25px rgba(0, 180, 216, 0.25);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* ==================== Reset & Base ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+    'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle Ocean Background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse at 15% 15%, rgba(0, 180, 216, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 85%, rgba(0, 119, 182, 0.08) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ==================== App Container ==================== */
+.app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  min-height: 100vh;
+}
+
+/* Logo Container */
+.app-header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.app-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--spacing-md);
+  filter: drop-shadow(0 4px 12px rgba(0, 180, 216, 0.3));
+}
+
+.app-title {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.app-title .highlight {
+  color: var(--primary-color);
+}
+
+.app-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ==================== Network Indicator ==================== */
+.network-indicator {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.network-indicator.mainnet {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.network-indicator.mainnet .dot {
+  background: var(--success-color);
+}
+
+.network-indicator.testnet {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.network-indicator.testnet .dot {
+  background: var(--warning-color);
+}
+
+.network-indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ==================== Tabs Navigation ==================== */
+.tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+  background: var(--bg-card);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition-normal);
+}
+
+.tab:hover:not(.active) {
+  color: var(--text-primary);
+  background: rgba(0, 180, 216, 0.1);
+}
+
+.tab.active {
+  color: var(--bg-primary);
+  background: var(--primary-color);
+  font-weight: 600;
+}
+
+/* ==================== Section Card ==================== */
+.section {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+}
+
+.section:hover {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow);
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ==================== Wallet Connect Button ==================== */
+.wallet-connect-btn {
+  background: var(--primary-color);
+  color: var(--bg-primary);
+  border: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.wallet-connect-btn:hover {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 180, 216, 0.35);
+}
+
+.wallet-connect-btn:active {
+  transform: translateY(0);
+}
+
+/* ==================== Wallet Info Card ==================== */
+.wallet-info-card {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+}
+
+.wallet-info-card.empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--spacing-2xl);
+  background: var(--bg-secondary);
+  border-style: dashed;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+  max-width: 60%;
+  text-align: right;
+}
+
+.balance-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* ==================== Input Group ==================== */
+.input-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+  transition: all var(--transition-normal);
+}
+
+.input-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+}
+
+/* ==================== Submit Button ==================== */
+.submit-btn {
+  background: var(--primary-color);
+  color: var(--bg-primary);
+  border: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all var(--transition-normal);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 180, 216, 0.35);
+}
+
+.submit-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ==================== Messages ==================== */
+.error-message {
+  color: var(--error-color);
+  background: rgba(239, 68, 68, 0.1);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.9rem;
+}
+
+.success-message {
+  color: var(--success-color);
+  background: rgba(16, 185, 129, 0.1);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 0.9rem;
+}
+
+/* ==================== Token List ==================== */
+.token-list {
+  margin-top: var(--spacing-lg);
+}
+
+.token-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.token-item:hover {
+  border-color: var(--border-glow);
+  transform: translateX(4px);
+}
+
+.token-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.token-type {
+  font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.token-status {
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.token-status.verified {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success-color);
+}
+
+.token-status.scam {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error-color);
+}
+
+.token-status.unknown {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning-color);
+}
+
+.token-amount {
+  font-weight: 600;
+  color: var(--primary-color);
+  white-space: nowrap;
+  font-size: 1.1rem;
+}
+
+/* ==================== Transaction Link ==================== */
+.tx-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.tx-link:hover {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+/* ==================== Loading ==================== */
+.loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--spacing-xl);
+}
+
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: var(--spacing-sm);
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== Scrollbar ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* ==================== RWD - Tablet (768px) ==================== */
+@media screen and (max-width: 768px) {
+  .app {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .app-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .app-title {
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .section {
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .tabs {
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8rem;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .info-value {
+    max-width: 100%;
+    text-align: left;
+    font-size: 0.85rem;
+  }
+
+  .balance-value {
+    font-size: 1.5rem;
+  }
+
+  .token-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .token-info {
+    width: 100%;
+  }
+
+  .token-amount {
+    align-self: flex-end;
+    margin-top: var(--spacing-xs);
+  }
+}
+
+/* ==================== RWD - Mobile (480px) ==================== */
+@media screen and (max-width: 480px) {
+  .app {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+
+  .app-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .app-title {
+    font-size: 1.4rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .app-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .section {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .section-title {
+    font-size: 1rem;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .tabs {
+    flex-direction: column;
+    border-radius: var(--radius-md);
+  }
+
+  .tab {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+  }
+
+  .input-group input {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9rem;
+  }
+
+  .submit-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9rem;
+  }
+
+  .wallet-info-card {
+    padding: var(--spacing-md);
+  }
+
+  .info-label {
+    font-size: 0.85rem;
+  }
+
+  .info-value {
+    font-size: 0.8rem;
+  }
+
+  .balance-value {
+    font-size: 1.25rem;
+  }
+
+  .token-type {
+    font-size: 0.75rem;
+  }
+
+  .token-status {
+    font-size: 0.7rem;
+  }
+
+  .token-amount {
+    font-size: 0.95rem;
+  }
+
+  .error-message,
+  .success-message {
+    font-size: 0.85rem;
+    padding: var(--spacing-sm);
+  }
+}

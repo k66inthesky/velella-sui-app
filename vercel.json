@@ -1,0 +1,41 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "npm install && cd frontend && npm install && cd ../backend && npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/wallet/:address/balance",
+      "destination": "/api/wallet/[address]/balance"
+    },
+    {
+      "source": "/api/wallet/:address/validate",
+      "destination": "/api/wallet/[address]/validate"
+    },
+    {
+      "source": "/api/object/fixed",
+      "destination": "/api/object/fixed"
+    },
+    {
+      "source": "/api/object/:objectId",
+      "destination": "/api/object/[objectId]"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,POST" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" }
+      ]
+    }
+  ]
+}
