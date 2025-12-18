@@ -112,16 +112,18 @@ function ObjectDisplay() {
           </div>
 
           <details style={{ marginTop: '20px' }}>
-            <summary style={{ cursor: 'pointer', color: '#666' }}>
+            <summary style={{ cursor: 'pointer', color: '#88b4e0' }}>
               📄 查看完整 Raw Fields
             </summary>
             <pre style={{ 
-              background: '#f5f5f5', 
+              background: '#1a2a3a', 
               padding: '12px', 
               borderRadius: '8px',
               overflow: 'auto',
               fontSize: '0.85rem',
-              marginTop: '8px'
+              marginTop: '8px',
+              color: '#88d4ab',
+              border: '1px solid #2a4a6a'
             }}>
               {JSON.stringify(data.rawFields, null, 2)}
             </pre>
