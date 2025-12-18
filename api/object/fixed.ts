@@ -1,11 +1,50 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getObjectFields } from '../_lib/sui.service'
+import { SuiClient } from '@mysten/sui/client'
 
-// 從環境變數取得固定的 Object ID
+const TESTNET_RPC_URL = process.env.SUI_TESTNET_RPC_URL || 'https://fullnode.testnet.sui.io:443'
+const testnetClient = new SuiClient({ url: TESTNET_RPC_URL })
 const FIXED_OBJECT_ID = process.env.TESTNET_OBJECT_ID || ''
 
+async function getObjectFields(objectId: string) {
+  try {
+    const object = await testnetClient.getObject({
+      id: objectId,
+      options: {
+        showContent: true,
+        showType: true
+      }
+    })
+
+    if (object.error) {
+      return {
+        objectId,
+        fields: null,
+        error: object.error.code
+      }
+    }
+
+    if (object.data?.content?.dataType === 'moveObject') {
+      return {
+        objectId,
+        fields: object.data.content.fields as Record<string, unknown>
+      }
+    }
+
+    return {
+      objectId,
+      fields: null,
+      error: 'Not a Move object'
+    }
+  } catch (error) {
+    return {
+      objectId,
+      fields: null,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -29,7 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json(result)
     }
 
-    // 解析並回傳 Admin / Id / Balance 欄位
     const fields = result.fields || {}
     return res.status(200).json({
       objectId: FIXED_OBJECT_ID,

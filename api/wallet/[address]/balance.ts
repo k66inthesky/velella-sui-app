@@ -1,8 +1,57 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getWalletBalance } from '../../_lib/sui.service'
+import { SuiClient } from '@mysten/sui/client'
+
+const MAINNET_RPC_URL = process.env.SUI_MAINNET_RPC_URL || 'https://fullnode.mainnet.sui.io:443'
+const mainnetClient = new SuiClient({ url: MAINNET_RPC_URL })
+
+interface BalanceInfo {
+  coinType: string
+  totalBalance: string
+  decimals: number
+  symbol: string
+  formattedBalance: string
+}
+
+async function getWalletBalance(address: string) {
+  const allBalances = await mainnetClient.getAllBalances({ owner: address })
+  
+  let suiBalance = '0'
+  const tokens: BalanceInfo[] = []
+
+  for (const balance of allBalances) {
+    if (balance.coinType === '0x2::sui::SUI') {
+      suiBalance = (Number(balance.totalBalance) / 1e9).toFixed(9)
+    } else {
+      try {
+        const metadata = await mainnetClient.getCoinMetadata({ coinType: balance.coinType })
+        const decimals = metadata?.decimals ?? 9
+        const symbol = metadata?.symbol ?? 'Unknown'
+        const rawBalance = Number(balance.totalBalance)
+        const formattedBalance = (rawBalance / Math.pow(10, decimals)).toString()
+        
+        tokens.push({
+          coinType: balance.coinType,
+          totalBalance: balance.totalBalance,
+          decimals,
+          symbol,
+          formattedBalance
+        })
+      } catch {
+        tokens.push({
+          coinType: balance.coinType,
+          totalBalance: balance.totalBalance,
+          decimals: 9,
+          symbol: 'Unknown',
+          formattedBalance: (Number(balance.totalBalance) / 1e9).toString()
+        })
+      }
+    }
+  }
+
+  return { address, suiBalance, tokens }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
