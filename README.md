@@ -2,8 +2,13 @@
 
 <div align="center">
   <img src="frontend/src/assets/velella-logo.png" alt="Velella Logo" width="150">
-  <p><strong> Veleella：連結 Mainnet 資產與 Testnet 數據的輕量化 Sui 全棧導航儀。</strong></p>
+  <p><strong> Velella：連結 Mainnet 資產與 Testnet 數據的輕量化 Sui 全棧導航儀。</strong></p>
 </div>
+
+Live Demo: https://velella-sui-app.vercel.app/
+
+https://github.com/user-attachments/assets/a773a1a3-553e-472e-b353-64654aff4174
+
 
 ---
 
