@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { isWalletAddress } from '../../../backend/src/services/sui.service'
+import { isWalletAddress } from '../../_lib/sui.service'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers

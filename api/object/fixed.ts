@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getObjectFields } from '../../backend/src/services/sui.service'
+import { getObjectFields } from '../_lib/sui.service'
 
 // 從環境變數取得固定的 Object ID
 const FIXED_OBJECT_ID = process.env.TESTNET_OBJECT_ID || ''
