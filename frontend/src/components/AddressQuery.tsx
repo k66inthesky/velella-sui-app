@@ -43,6 +43,10 @@ function AddressQuery() {
   
   const { getCoinStatus, getStatusDisplay, isScamPackage, loading: listLoading } = useCoinBlocklist()
 
+  const networkBadge = (
+    <span style={{ padding: '4px 12px', backgroundColor: '#22c55e', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>Mainnet</span>
+  )
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -135,7 +139,10 @@ function AddressQuery() {
 
   return (
     <div className="section">
-      <h2 className="section-title">🔍 UserStory 1-2：查詢錢包地址 (Mainnet)</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>🔍 UserStory 1-2：查詢錢包地址</h2>
+        {networkBadge}
+      </div>
       
       <form onSubmit={handleSubmit}>
         <div className="input-group">

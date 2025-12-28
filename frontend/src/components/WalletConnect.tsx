@@ -25,7 +25,10 @@ function WalletConnect() {
 
   return (
     <div className="section">
-      <h2 className="section-title">📱 UserStory 1-1：連接錢包 (Mainnet)</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>📱 UserStory 1-1：連接錢包</h2>
+        <span style={{ padding: '4px 12px', backgroundColor: '#22c55e', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>Mainnet</span>
+      </div>
       
       <div style={{ marginBottom: '20px' }}>
         <ConnectButton />

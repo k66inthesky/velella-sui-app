@@ -54,7 +54,10 @@ function ObjectDisplay() {
 
   return (
     <div className="section">
-      <h2 className="section-title">📦 UserStory 3：Object 資料 (Testnet)</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>📦 UserStory 3：Object 資料</h2>
+        <span style={{ padding: '4px 12px', backgroundColor: '#6366f1', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: 'white' }}>Testnet</span>
+      </div>
       
       {loading && (
         <div className="loading">載入中...</div>

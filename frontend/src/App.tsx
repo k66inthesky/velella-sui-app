@@ -4,9 +4,13 @@ import WalletConnect from './components/WalletConnect'
 import AddressQuery from './components/AddressQuery'
 import ObjectDisplay from './components/ObjectDisplay'
 import TransferForm from './components/TransferForm'
+import ZkLoginKiosk from './components/ZkLoginKiosk'
+import WalrusUpload from './components/WalrusUpload'
+import DeepBookSwap from './components/DeepBookSwap'
+import PredictionMarket from './components/PredictionMarket'
 import logoImg from './assets/velella-logo.png'
 
-type TabType = 'wallet' | 'query' | 'object' | 'transfer'
+type TabType = 'wallet' | 'query' | 'object' | 'transfer' | 'zklogin' | 'walrus' | 'deepbook' | 'nautilus'
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('wallet')
@@ -18,11 +22,12 @@ function App() {
       if (network !== 'mainnet') {
         selectNetwork('mainnet')
       }
-    } else if (activeTab === 'object' || activeTab === 'transfer') {
+    } else if (activeTab === 'object' || activeTab === 'transfer' || activeTab === 'deepbook' || activeTab === 'nautilus') {
       if (network !== 'testnet') {
         selectNetwork('testnet')
       }
     }
+    // zklogin 和 walrus 不需要切換網路（獨立運作）
   }, [activeTab, network, selectNetwork])
 
   return (
@@ -48,25 +53,49 @@ function App() {
           className={`tab ${activeTab === 'wallet' ? 'active' : ''}`}
           onClick={() => setActiveTab('wallet')}
         >
-          連接錢包 (Mainnet)
+          連接錢包
         </button>
         <button 
           className={`tab ${activeTab === 'query' ? 'active' : ''}`}
           onClick={() => setActiveTab('query')}
         >
-          查詢地址 (Mainnet)
+          查詢地址
         </button>
         <button 
           className={`tab ${activeTab === 'object' ? 'active' : ''}`}
           onClick={() => setActiveTab('object')}
         >
-          Object 資料 (Testnet)
+          Object 資料
         </button>
         <button 
           className={`tab ${activeTab === 'transfer' ? 'active' : ''}`}
           onClick={() => setActiveTab('transfer')}
         >
-          轉帳 (Testnet)
+          轉帳
+        </button>
+        <button 
+          className={`tab ${activeTab === 'zklogin' ? 'active' : ''}`}
+          onClick={() => setActiveTab('zklogin')}
+        >
+          🔐 zkLogin
+        </button>
+        <button 
+          className={`tab ${activeTab === 'walrus' ? 'active' : ''}`}
+          onClick={() => setActiveTab('walrus')}
+        >
+          🦭 Walrus
+        </button>
+        <button 
+          className={`tab ${activeTab === 'deepbook' ? 'active' : ''}`}
+          onClick={() => setActiveTab('deepbook')}
+        >
+          📊 DeepBook
+        </button>
+        <button 
+          className={`tab ${activeTab === 'nautilus' ? 'active' : ''}`}
+          onClick={() => setActiveTab('nautilus')}
+        >
+          🐚 Nautilus
         </button>
       </div>
 
@@ -74,6 +103,10 @@ function App() {
       {activeTab === 'query' && <AddressQuery />}
       {activeTab === 'object' && <ObjectDisplay />}
       {activeTab === 'transfer' && <TransferForm />}
+      {activeTab === 'zklogin' && <ZkLoginKiosk />}
+      {activeTab === 'walrus' && <WalrusUpload />}
+      {activeTab === 'deepbook' && <DeepBookSwap />}
+      {activeTab === 'nautilus' && <PredictionMarket />}
     </div>
   )
 }
