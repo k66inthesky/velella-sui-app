@@ -5,7 +5,9 @@
   <p><strong> Velella：連結 Mainnet 資產與 Testnet 數據的輕量化 Sui 全棧導航儀。</strong></p>
 </div>
 
-Live Demo: https://velella-sui-app.vercel.app/
+📢新增功能：支援zklogin, walrus上傳圖片, DeepBook換幣(SUI/DEEP), Bucket Protocol查(Vaults, Positions, PSM, Prices)。
+
+🔗Live Demo： https://velella-sui-app.vercel.app/
 
 https://github.com/user-attachments/assets/a773a1a3-553e-472e-b353-64654aff4174
 
