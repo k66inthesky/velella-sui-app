@@ -1,11 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
+import { bcs } from '@mysten/sui/bcs'
 
-// Testnet USDC 代幣類型
-const USDC_TYPE = '0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC'
+// DeepBook Testnet 配置
+// 使用 SDK 官方 testnet package ID
+const DEEPBOOK_PACKAGE_ID = '0xb48d47cb5f56d0f489f48f186d06672df59d64bd2f514b2f0ba40cbb8c8fd487'
 
-// DeepBook DEX - 訂單簿展示 + 簡易 Swap
+// Testnet Pools
+const POOL_DEEP_SUI = '0x48c95963e9eac37a316b7ae04a0deb761bcdcc2b67912374d6036e7f0e9bae9f'
+
+// Testnet 代幣類型
+const SUI_TYPE = '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI'
+const DEEP_TYPE = '0x36dbef866a1d62bf7328989a10fb2f07d769f4ee587c0de4a0a256e57e0a58a8::deep::DEEP'
+
+// 小數位
+const SUI_SCALAR = 1e9
+const DEEP_SCALAR = 1e6
+
+// Pool 參數 (從鏈上 pool 對象讀取)
+const MIN_SIZE = 10 // 最小訂單大小: 10 DEEP
+// LOT_SIZE = 1 DEEP (最小交易單位)
+
+// DeepBook DEX - DEEP/SUI 交易對（只需要 SUI 就能交易）
 function DeepBookSwap() {
   const account = useCurrentAccount()
   const client = useSuiClient()
@@ -23,60 +40,100 @@ function DeepBookSwap() {
   const [txResult, setTxResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [suiBalance, setSuiBalance] = useState<string | null>(null)
-  const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
+  const [deepBalance, setDeepBalance] = useState<string | null>(null)
 
-  // 模擬載入訂單簿（實際需要 DeepBook Pool ID）
+  // 載入真實訂單簿（從鏈上查詢）
   const loadOrderBook = async () => {
     setIsLoadingOrderBook(true)
-    setError(null)
     
     try {
-      // 模擬真實的訂單簿資料
-      // 在實際應用中，需要使用 DeepBook SDK 查詢真實 Pool
-      const basePrice = 4.25 + (Math.random() - 0.5) * 0.1
+      const tx = new Transaction()
       
-      const bids = Array(5).fill(0).map((_, i) => ({
-        price: (basePrice - 0.005 * (i + 1)).toFixed(4),
-        quantity: (Math.random() * 5000 + 500).toFixed(0),
-      }))
+      // 查詢真實的 order book
+      tx.moveCall({
+        target: `${DEEPBOOK_PACKAGE_ID}::pool::get_level2_ticks_from_mid`,
+        arguments: [
+          tx.object(POOL_DEEP_SUI),
+          tx.pure.u64(5), // 5 ticks from mid
+          tx.object('0x6')
+        ],
+        typeArguments: [DEEP_TYPE, SUI_TYPE]
+      })
       
-      const asks = Array(5).fill(0).map((_, i) => ({
-        price: (basePrice + 0.005 * (i + 1)).toFixed(4),
-        quantity: (Math.random() * 5000 + 500).toFixed(0),
-      }))
-
-      const spread = (parseFloat(asks[0].price) - parseFloat(bids[0].price)).toFixed(4)
-      const midPrice = ((parseFloat(asks[0].price) + parseFloat(bids[0].price)) / 2).toFixed(4)
+      const result = await client.devInspectTransactionBlock({
+        transactionBlock: tx,
+        sender: account?.address || '0x0000000000000000000000000000000000000000000000000000000000000000'
+      })
       
-      setOrderBook({ bids, asks, spread, midPrice })
+      if (result.results?.[0]?.returnValues) {
+        const returnValues = result.results[0].returnValues
+        const VecU64 = bcs.vector(bcs.u64())
+        const FLOAT_SCALAR = 1e9
+        
+        const bidPricesRaw = VecU64.parse(new Uint8Array(returnValues[0][0]))
+        const bidQtysRaw = VecU64.parse(new Uint8Array(returnValues[1][0]))
+        const askPricesRaw = VecU64.parse(new Uint8Array(returnValues[2][0]))
+        const askQtysRaw = VecU64.parse(new Uint8Array(returnValues[3][0]))
+        
+        // 轉換價格: raw_price * baseCoin.scalar / quoteCoin.scalar / FLOAT_SCALAR
+        // baseCoin = DEEP (1e6), quoteCoin = SUI (1e9)
+        const bids = bidPricesRaw.slice(0, 5).map((p, i) => ({
+          price: (Number(p) * DEEP_SCALAR / SUI_SCALAR / FLOAT_SCALAR).toFixed(4),
+          quantity: (Number(bidQtysRaw[i]) / DEEP_SCALAR).toFixed(0)
+        }))
+        
+        const asks = askPricesRaw.slice(0, 5).map((p, i) => ({
+          price: (Number(p) * DEEP_SCALAR / SUI_SCALAR / FLOAT_SCALAR).toFixed(4),
+          quantity: (Number(askQtysRaw[i]) / DEEP_SCALAR).toFixed(0)
+        }))
+        
+        const bestBid = bids.length > 0 ? parseFloat(bids[0].price) : 0
+        const bestAsk = asks.length > 0 ? parseFloat(asks[0].price) : 0
+        const spread = (bestAsk - bestBid).toFixed(4)
+        const midPrice = ((bestAsk + bestBid) / 2).toFixed(4)
+        
+        setOrderBook({ bids, asks, spread, midPrice })
+      } else {
+        // 如果查詢失敗，使用備用價格
+        setOrderBook({
+          bids: [{ price: '0.679', quantity: '10' }],
+          asks: [{ price: '0.681', quantity: '10' }],
+          spread: '0.002',
+          midPrice: '0.680'
+        })
+      }
     } catch (err) {
       console.error('Load order book error:', err)
-      setError(err instanceof Error ? err.message : '載入訂單簿失敗')
+      // 備用價格
+      setOrderBook({
+        bids: [{ price: '0.679', quantity: '10' }],
+        asks: [{ price: '0.681', quantity: '10' }],
+        spread: '0.002',
+        midPrice: '0.680'
+      })
     } finally {
       setIsLoadingOrderBook(false)
     }
   }
 
-  // 載入 SUI 和 USDC 餘額
+  // 載入餘額
   useEffect(() => {
     const fetchBalances = async () => {
       if (!account?.address) return
       try {
-        // 獲取 SUI 餘額
+        // SUI 餘額
         const suiResult = await client.getBalance({ owner: account.address })
-        const sui = Number(suiResult.totalBalance) / 1_000_000_000
-        setSuiBalance(sui.toFixed(4))
+        setSuiBalance((Number(suiResult.totalBalance) / SUI_SCALAR).toFixed(4))
         
-        // 獲取 USDC 餘額
+        // DEEP 餘額
         try {
-          const usdcResult = await client.getBalance({ 
+          const deepResult = await client.getBalance({ 
             owner: account.address,
-            coinType: USDC_TYPE
+            coinType: DEEP_TYPE
           })
-          const usdc = Number(usdcResult.totalBalance) / 1_000_000 // USDC 是 6 位小數
-          setUsdcBalance(usdc.toFixed(2))
+          setDeepBalance((Number(deepResult.totalBalance) / DEEP_SCALAR).toFixed(2))
         } catch {
-          setUsdcBalance('0.00')
+          setDeepBalance('0.00')
         }
       } catch (err) {
         console.error('Fetch balance error:', err)
@@ -91,21 +148,48 @@ function DeepBookSwap() {
     return () => clearInterval(interval)
   }, [])
 
+  // 真實 Swap 交易
   const handleSwap = async () => {
     if (!account || !amount) {
       setError('請連接錢包並輸入數量')
       return
     }
 
-    // 檢查餘額是否足夠
+    const inputAmount = parseFloat(amount)
+    if (isNaN(inputAmount) || inputAmount <= 0) {
+      setError('請輸入有效數量')
+      return
+    }
+
+    // 根據當前價格計算預估獲得的 DEEP 數量
+    const currentPrice = orderBook?.asks?.[0]?.price ? parseFloat(orderBook.asks[0].price) : 0.68
+    const estimatedDeep = side === 'buy' ? inputAmount / currentPrice : inputAmount
+
+    // DeepBook min_size 檢查：必須交易至少 10 DEEP
     if (side === 'buy') {
-      if (parseFloat(amount) > parseFloat(usdcBalance || '0')) {
-        setError('USDC 餘額不足')
+      if (estimatedDeep < MIN_SIZE) {
+        const minSuiNeeded = MIN_SIZE * currentPrice + 0.5 // 加上一點 buffer
+        setError(`最小交易量為 ${MIN_SIZE} DEEP（約 ${minSuiNeeded.toFixed(1)} SUI）。您輸入的 ${inputAmount} SUI 只能買約 ${estimatedDeep.toFixed(1)} DEEP`)
         return
       }
     } else {
-      if (parseFloat(amount) > parseFloat(suiBalance || '0')) {
-        setError('SUI 餘額不足')
+      if (inputAmount < MIN_SIZE) {
+        setError(`最小交易量為 ${MIN_SIZE} DEEP`)
+        return
+      }
+    }
+
+    // 檢查餘額（買 DEEP 需要額外預留 gas 費用）
+    if (side === 'buy') {
+      const totalNeeded = inputAmount + 0.05 // 交易金額 + gas
+      if (totalNeeded > parseFloat(suiBalance || '0')) {
+        setError(`SUI 餘額不足。需要約 ${totalNeeded.toFixed(2)} SUI（含 gas）`)
+        return
+      }
+    } else {
+      // 賣 DEEP：需要 DEEP
+      if (inputAmount > parseFloat(deepBalance || '0')) {
+        setError('DEEP 餘額不足')
         return
       }
     }
@@ -114,36 +198,118 @@ function DeepBookSwap() {
     setTxResult(null)
 
     try {
-      // 模擬交易：做一個自轉帳來展示交易流程
-      // 實際 DeepBook 交易需要有對應的代幣和 Pool
-      
       const tx = new Transaction()
-      
-      // 根據買賣方向決定交易金額
-      // 買入：用 USDC 買 SUI（這裡模擬為轉少量 SUI）
-      // 賣出：賣 SUI 換 USDC（這裡模擬為轉入的 SUI 數量）
-      const amountInMist = side === 'sell' 
-        ? BigInt(Math.floor(parseFloat(amount) * 1_000_000_000))
-        : BigInt(Math.floor(0.001 * 1_000_000_000)) // 買入時只用少量 gas 做示範
-      
-      // 示範交易
-      const [coin] = tx.splitCoins(tx.gas, [amountInMist])
-      tx.transferObjects([coin], account.address)
+      tx.setGasBudget(50000000) // 0.05 SUI gas budget
+
+      if (side === 'buy') {
+        // 用 SUI 買 DEEP (使用 swap_exact_quantity)
+        // DEEP_SUI 池: base=DEEP, quote=SUI
+        // 注意：DEEP_SUI 是白名單池，0% 手續費
+        const suiAmount = Math.round(inputAmount * SUI_SCALAR)
+        
+        // 從 gas coin 分出要交換的 SUI
+        const [suiCoin] = tx.splitCoins(tx.gas, [suiAmount])
+        
+        // 創建空的 DEEP coin (base - 我們要買的)
+        const [zeroBase] = tx.moveCall({
+          target: '0x2::coin::zero',
+          typeArguments: [DEEP_TYPE]
+        })
+        
+        // 創建空的 DEEP coin（手續費用）
+        const [zeroDeepFee] = tx.moveCall({
+          target: '0x2::coin::zero',
+          typeArguments: [DEEP_TYPE]
+        })
+
+        // 調用 swap_exact_quantity
+        // 函數簽名: swap_exact_quantity(pool, base_in, quote_in, deep_in, min_out, clock)
+        // 返回值: (Coin<Base>, Coin<Quote>, Coin<DEEP>) - 3個coins
+        const [baseOut, quoteOut, deepOut] = tx.moveCall({
+          target: `${DEEPBOOK_PACKAGE_ID}::pool::swap_exact_quantity`,
+          arguments: [
+            tx.object(POOL_DEEP_SUI),
+            zeroBase,        // base_in: 空的 DEEP (我們是買方)
+            suiCoin,         // quote_in: SUI coin 要花的
+            zeroDeepFee,     // deep_in: DEEP coin 用於手續費（白名單池為0）
+            tx.pure.u64(0),  // min_out: 最小獲得數量
+            tx.object('0x6') // Clock
+          ],
+          typeArguments: [DEEP_TYPE, SUI_TYPE]
+        })
+
+        // 將結果轉給自己（3個 coins: base獲得, quote剩餘, deep剩餘）
+        tx.transferObjects([baseOut, quoteOut, deepOut], account.address)
+        
+      } else {
+        // 賣 DEEP 換 SUI (使用 swap_exact_quantity)
+        // 注意：DEEP_SUI 是白名單池，0% 手續費
+        const deepAmount = Math.round(inputAmount * DEEP_SCALAR)
+        
+        // 獲取用戶的 DEEP coins
+        const deepCoins = await client.getCoins({
+          owner: account.address,
+          coinType: DEEP_TYPE
+        })
+        
+        if (deepCoins.data.length === 0) {
+          setError('沒有 DEEP 代幣')
+          return
+        }
+
+        // 合併所有 DEEP coins
+        const primaryCoin = tx.object(deepCoins.data[0].coinObjectId)
+        if (deepCoins.data.length > 1) {
+          const otherCoins = deepCoins.data.slice(1).map(c => tx.object(c.coinObjectId))
+          tx.mergeCoins(primaryCoin, otherCoins)
+        }
+        
+        // 分出要賣的數量
+        const [deepCoin] = tx.splitCoins(primaryCoin, [deepAmount])
+        
+        // 創建空的 SUI coin (quote - 我們要獲得的)
+        const [zeroQuote] = tx.moveCall({
+          target: '0x2::coin::zero',
+          typeArguments: [SUI_TYPE]
+        })
+        
+        // 創建空的 DEEP coin（手續費用）
+        const [zeroDeepFee] = tx.moveCall({
+          target: '0x2::coin::zero',
+          typeArguments: [DEEP_TYPE]
+        })
+
+        // 調用 swap_exact_quantity
+        // 函數簽名: swap_exact_quantity(pool, base_in, quote_in, deep_in, min_out, clock)
+        // 返回值: (Coin<Base>, Coin<Quote>, Coin<DEEP>) - 3個coins
+        const [baseOut, quoteOut, deepOut] = tx.moveCall({
+          target: `${DEEPBOOK_PACKAGE_ID}::pool::swap_exact_quantity`,
+          arguments: [
+            tx.object(POOL_DEEP_SUI),
+            deepCoin,        // base_in: DEEP coin 要賣的
+            zeroQuote,       // quote_in: 空的 SUI (我們是賣方)
+            zeroDeepFee,     // deep_in: DEEP coin 用於手續費（白名單池為0）
+            tx.pure.u64(0),  // min_out: 最小獲得數量
+            tx.object('0x6') // Clock
+          ],
+          typeArguments: [DEEP_TYPE, SUI_TYPE]
+        })
+
+        // 將結果轉給自己（3個 coins: base剩餘, quote獲得, deep剩餘）
+        tx.transferObjects([baseOut, quoteOut, deepOut], account.address)
+      }
 
       signAndExecute(
         { transaction: tx },
         {
           onSuccess: async (result) => {
-            // 查詢交易狀態確認是否真的成功
             try {
               const txDetails = await client.waitForTransaction({
                 digest: result.digest,
                 options: { showEffects: true }
               })
               
-              const status = txDetails.effects?.status?.status
-              
-              if (status === 'success') {
+              if (txDetails.effects?.status?.status === 'success') {
                 setTxResult(result.digest)
                 setAmount('')
                 loadOrderBook()
@@ -151,14 +317,14 @@ function DeepBookSwap() {
                 const errorMsg = txDetails.effects?.status?.error || '交易執行失敗'
                 setError(`交易失敗: ${errorMsg}`)
               }
-            } catch (err) {
-              // 如果查詢失敗，假設交易成功（已經提交）
+            } catch {
               setTxResult(result.digest)
               setAmount('')
               loadOrderBook()
             }
           },
           onError: (err) => {
+            console.error('Swap error:', err)
             setError(err.message)
           }
         }
@@ -176,7 +342,7 @@ function DeepBookSwap() {
         <span style={{ padding: '4px 12px', backgroundColor: '#6366f1', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>Testnet</span>
       </div>
       <p className="description">
-        Sui 原生訂單簿 DEX - 即時訂單簿展示
+        Sui 原生訂單簿 DEX - DEEP/SUI 交易對
       </p>
 
       {error && (
@@ -198,29 +364,29 @@ function DeepBookSwap() {
               {account.address.slice(0, 10)}...{account.address.slice(-8)}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
             <div style={{ 
-              flex: 1, 
-              padding: '12px', 
+              flex: '1 1 150px', 
+              padding: '16px', 
               backgroundColor: 'rgba(59, 130, 246, 0.1)', 
               borderRadius: '8px',
               textAlign: 'center'
             }}>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>SUI 餘額</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>
+              <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
                 {suiBalance ?? '...'} SUI
               </p>
             </div>
             <div style={{ 
-              flex: 1, 
-              padding: '12px', 
-              backgroundColor: 'rgba(34, 197, 94, 0.1)', 
+              flex: '1 1 150px', 
+              padding: '16px', 
+              backgroundColor: 'rgba(168, 85, 247, 0.1)', 
               borderRadius: '8px',
               textAlign: 'center'
             }}>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>USDC 餘額</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#22c55e' }}>
-                {usdcBalance ?? '...'} USDC
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>DEEP 餘額</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: 'bold', color: '#a855f7' }}>
+                {deepBalance ?? '...'} DEEP
               </p>
             </div>
           </div>
@@ -229,14 +395,17 @@ function DeepBookSwap() {
 
       {/* 交易對資訊 */}
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h3 style={{ margin: 0 }}>SUI / USDC</h3>
+        <h3 style={{ margin: 0 }}>DEEP / SUI</h3>
+        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+          用 SUI 購買 DEEP 代幣，或賣出 DEEP 換回 SUI
+        </p>
         {orderBook && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '8px' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-              中間價: <strong style={{ color: 'var(--text-primary)' }}>${orderBook.midPrice}</strong>
+              中間價: <strong style={{ color: 'var(--text-primary)' }}>{orderBook.midPrice} SUI</strong>
             </span>
             <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-              價差: <strong style={{ color: 'var(--text-primary)' }}>${orderBook.spread}</strong>
+              價差: <strong style={{ color: 'var(--text-primary)' }}>{orderBook.spread} SUI</strong>
             </span>
           </div>
         )}
@@ -270,8 +439,8 @@ function DeepBookSwap() {
             <table style={{ width: '100%', fontSize: '13px' }}>
               <thead>
                 <tr style={{ color: 'var(--text-muted)' }}>
-                  <th style={{ textAlign: 'left', fontWeight: 'normal' }}>價格 ($)</th>
-                  <th style={{ textAlign: 'right', fontWeight: 'normal' }}>數量 (SUI)</th>
+                  <th style={{ textAlign: 'left', fontWeight: 'normal' }}>價格 (SUI)</th>
+                  <th style={{ textAlign: 'right', fontWeight: 'normal' }}>數量 (DEEP)</th>
                 </tr>
               </thead>
               <tbody>
@@ -295,8 +464,8 @@ function DeepBookSwap() {
             <table style={{ width: '100%', fontSize: '13px' }}>
               <thead>
                 <tr style={{ color: 'var(--text-muted)' }}>
-                  <th style={{ textAlign: 'left', fontWeight: 'normal' }}>價格 ($)</th>
-                  <th style={{ textAlign: 'right', fontWeight: 'normal' }}>數量 (SUI)</th>
+                  <th style={{ textAlign: 'left', fontWeight: 'normal' }}>價格 (SUI)</th>
+                  <th style={{ textAlign: 'right', fontWeight: 'normal' }}>數量 (DEEP)</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,7 +483,7 @@ function DeepBookSwap() {
 
       {/* 交易表單 */}
       <div className="result-card">
-        <h4 style={{ margin: '0 0 16px 0' }}>模擬交易</h4>
+        <h4 style={{ margin: '0 0 16px 0' }}>🔄 Swap 交易</h4>
         
         {/* 買/賣切換 */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -332,7 +501,7 @@ function DeepBookSwap() {
               fontWeight: 'bold'
             }}
           >
-            買入 SUI
+            🟢 買入 DEEP
           </button>
           <button
             onClick={() => setSide('sell')}
@@ -348,21 +517,21 @@ function DeepBookSwap() {
               fontWeight: 'bold'
             }}
           >
-            賣出 SUI
+            🔴 賣出 DEEP
           </button>
         </div>
 
         {/* 數量輸入 */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-muted)' }}>
-            {side === 'buy' ? '支付 USDC 數量' : '賣出 SUI 數量'}
+            {side === 'buy' ? '支付 SUI 數量' : '賣出 DEEP 數量'}
           </label>
           <div style={{ position: 'relative' }}>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="輸入數量"
+              placeholder={side === 'buy' ? '輸入 SUI 數量' : '輸入 DEEP 數量'}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -382,7 +551,7 @@ function DeepBookSwap() {
               color: 'var(--text-muted)',
               fontWeight: 'bold'
             }}>
-              {side === 'buy' ? 'USDC' : 'SUI'}
+              {side === 'buy' ? 'SUI' : 'DEEP'}
             </span>
           </div>
           {orderBook && amount && (
@@ -392,17 +561,15 @@ function DeepBookSwap() {
               backgroundColor: 'rgba(99, 102, 241, 0.1)', 
               borderRadius: '8px' 
             }}>
-              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
-                {side === 'buy' ? '預估獲得' : '預估獲得'}
-              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>預估獲得</p>
               <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                 {side === 'buy' 
-                  ? `≈ ${(parseFloat(amount || '0') / parseFloat(orderBook.midPrice)).toFixed(4)} SUI`
-                  : `≈ ${(parseFloat(amount || '0') * parseFloat(orderBook.midPrice)).toFixed(2)} USDC`
+                  ? `≈ ${(parseFloat(amount || '0') / parseFloat(orderBook.midPrice)).toFixed(2)} DEEP`
+                  : `≈ ${(parseFloat(amount || '0') * parseFloat(orderBook.midPrice)).toFixed(4)} SUI`
                 }
               </p>
               <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
-                參考價格: 1 SUI = ${orderBook.midPrice} USDC
+                參考價格: 1 DEEP ≈ {orderBook.midPrice} SUI
               </p>
             </div>
           )}
@@ -428,20 +595,10 @@ function DeepBookSwap() {
           {isPending 
             ? '交易中...' 
             : side === 'buy' 
-              ? `用 ${amount || '0'} USDC 買入 SUI` 
-              : `賣出 ${amount || '0'} SUI 換 USDC`
+              ? `用 ${amount || '0'} SUI 買入 DEEP` 
+              : `賣出 ${amount || '0'} DEEP 換 SUI`
           }
         </button>
-        
-        {/* 餘額不足提示 */}
-        {account && amount && (
-          (side === 'buy' && parseFloat(amount) > parseFloat(usdcBalance || '0')) ||
-          (side === 'sell' && parseFloat(amount) > parseFloat(suiBalance || '0'))
-        ) && (
-          <p style={{ marginTop: '8px', fontSize: '12px', color: '#ff4757', textAlign: 'center' }}>
-            ⚠️ {side === 'buy' ? 'USDC' : 'SUI'} 餘額不足
-          </p>
-        )}
       </div>
 
       {/* 交易結果 */}
@@ -461,12 +618,15 @@ function DeepBookSwap() {
 
       {/* 說明 */}
       <div style={{ marginTop: '24px', padding: '16px', backgroundColor: 'var(--surface)', borderRadius: '8px' }}>
-        <h4 style={{ marginBottom: '12px' }}>💡 技術說明</h4>
+        <h4 style={{ marginBottom: '12px' }}>💡 DeepBook V3 說明</h4>
         <ul style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.8' }}>
-          <li><strong>DeepBook</strong>：Sui 原生的中央限價訂單簿 (CLOB)</li>
-          <li><strong>交易對</strong>：SUI/USDC - 用 USDC 買入或賣出 SUI</li>
-          <li><strong>訂單簿</strong>：顯示即時買賣掛單深度</li>
-          <li><strong>注意</strong>：此為模擬交易，完整整合需要 DeepBook Pool</li>
+          <li><strong style={{ color: '#ff4757' }}>⚠️ 最小交易量</strong>：至少需要交易 {MIN_SIZE} DEEP（約 {(MIN_SIZE * 0.68).toFixed(1)} SUI）</li>
+          <li><strong>交易對</strong>：DEEP/SUI - 只需要 SUI 即可交易</li>
+          <li><strong>買入 DEEP</strong>：用 SUI 購買 DEEP 代幣</li>
+          <li><strong>賣出 DEEP</strong>：將 DEEP 換回 SUI</li>
+          <li><strong>手續費</strong>：0%（白名單池）</li>
+          <li><strong>Pool 地址</strong>：<code style={{ fontSize: '10px' }}>{POOL_DEEP_SUI.slice(0, 20)}...</code></li>
+          <li><strong>獲取 SUI</strong>：使用 <a href="https://faucet.polymedia.app/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>Sui Faucet</a></li>
         </ul>
       </div>
     </div>

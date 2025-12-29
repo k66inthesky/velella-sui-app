@@ -9,7 +9,6 @@ Live Demo: https://velella-sui-app.vercel.app/
 
 https://github.com/user-attachments/assets/a773a1a3-553e-472e-b353-64654aff4174
 
-
 ---
 
 ## Tech Stack
@@ -21,20 +20,20 @@ https://github.com/user-attachments/assets/a773a1a3-553e-472e-b353-64654aff4174
 | **Blockchain SDK** | @mysten/sui, @mysten/dapp-kit |
 | **zkLogin** | @mysten/enoki (Google OAuth) |
 | **Storage** | Walrus Testnet + AES-256-GCM |
-| **DEX** | @mysten/deepbook-v3 |
+| **DEX** | DeepBook V3 (@mysten/deepbook-v3) |
+| **DeFi** | Bucket Protocol (@bucket-protocol/sdk) |
 | **部署** | Vercel (Serverless Functions) |
 
 ---
 
 ## 專案結構
 
-```
+\`\`\`
 velella-sui-app/
 ├── package.json                    # 根目錄 package.json（Vercel 部署用）
 ├── vercel.json                     # Vercel 配置
 ├── .gitignore                      # Git 忽略檔案
 ├── README.md                       # 專案說明文件
-│
 │
 ├── api/                            # Vercel Serverless Functions
 │   ├── wallet/
@@ -64,29 +63,27 @@ velella-sui-app/
 │       │   ├── ZkLoginKiosk.tsx   # Bonus 1：zkLogin 登入
 │       │   ├── WalrusUpload.tsx   # Bonus 2：Walrus 檔案儲存
 │       │   ├── DeepBookSwap.tsx   # Bonus 3：DeepBook DEX
-│       │   └── PredictionMarket.tsx # Bonus 4：Nautilus TEE
+│       │   └── BucketDashboard.tsx # Bonus 4：Bucket Protocol
 │       ├── hooks/
 │       │   └── useCoinBlocklist.ts # 代幣黑白名單 Hook
 │       └── services/
 │           └── api.ts             # API 服務
 │
-├── backend/                        # Node.js + Express（本地開發用）
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .gitignore                 # Git 忽略檔案
-│   ├── .env                       # 環境變數（不入版控）
-│   ├── .env.example               # 環境變數範例
-│   └── src/
-│       ├── index.ts               # Express 入口
-│       ├── routes/
-│       │   ├── wallet.routes.ts   # 錢包路由
-│       │   └── object.routes.ts   # Object 路由
-│       ├── controllers/
-│       │   ├── wallet.controller.ts
-│       │   └── object.controller.ts
-│       └── services/
-│           └── sui.service.ts     # Sui SDK 服務層
-```
+└── backend/                        # Node.js + Express（本地開發用）
+    ├── package.json
+    ├── tsconfig.json
+    ├── .env.example               # 環境變數範例
+    └── src/
+        ├── index.ts               # Express 入口
+        ├── routes/
+        │   ├── wallet.routes.ts   # 錢包路由
+        │   └── object.routes.ts   # Object 路由
+        ├── controllers/
+        │   ├── wallet.controller.ts
+        │   └── object.controller.ts
+        └── services/
+            └── sui.service.ts     # Sui SDK 服務層
+\`\`\`
 
 ---
 
@@ -96,11 +93,11 @@ velella-sui-app/
 
 | 顏色 | 用途 |
 |------|------|
-| `#00b4d8` | 主色 (Ocean Blue) |
-| `#48cae4` | 淺藍 (Light Blue) |
-| `#0077b6` | 深藍 (Deep Ocean) |
-| `#0a1628` | 背景 (Dark Navy) |
-| `#e8f4f8` | 文字 (Light Text) |
+| \`#00b4d8\` | 主色 (Ocean Blue) |
+| \`#48cae4\` | 淺藍 (Light Blue) |
+| \`#0077b6\` | 深藍 (Deep Ocean) |
+| \`#0a1628\` | 背景 (Dark Navy) |
+| \`#e8f4f8\` | 文字 (Light Text) |
 
 特色：
 - 🌊 深邃的海洋藍背景
@@ -110,90 +107,77 @@ velella-sui-app/
 
 ---
 
-## 需求檢查報告
+## 功能總覽
 
-### 額外功能 (Beyond Scope)
+| UserStory | 功能 | 網路 | 狀態 |
+|-----------|------|------|------|
+| 1-1 | 連接錢包 + 顯示餘額 | Mainnet | ✅ |
+| 1-2 | 查詢任意地址餘額 + 代幣 | Mainnet | ✅ |
+| 3 | 讀取 Object 資料 | Testnet | ✅ |
+| 4 | 發送 SUI 轉帳交易 | Testnet | ✅ |
+| 5 | 支援 zkLogin | Testnet | ✅ |
+| 6 | 支援 Walrus | Testnet | ✅ |
+| 7 | 支援 DeepBook | Testnet | ✅ |
+| 8 | 支援 Bucket Protocol SDK | Mainnet | ✅ |
 
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| RWD 響應式設計 | ✅ 已實作 | 支援桌面、平板、手機 |
-| Scam Token 檢測 | ✅ 已實作 | 動態抓取 MystenLabs 官方黑白名單 |
-| 只需顯示 Coin Type | ✅ 符合 | 顯示 symbol + coinType |
-
-### 代幣驗證狀態說明
-
-| 狀態 | 圖示 | 說明 |
-|------|------|------|
-| 黑名單 (Scam) | 😈 scam | MystenLabs 官方認證的詐騙代幣 |
-| 白名單 (Verified) | 😇 verified | MystenLabs 官方認證的合法代幣 |
-| 未知 (Unknown) | 🤔 unknown | 不在黑白名單中的代幣 |
++ 第1-4是基礎功能。
++ 第5-8是Bonus功能。
 
 ---
 
-### UserStory 1-1：連接錢包 (Mainnet)
+## Bonus 功能 (Advanced Sui Ecosystem)
 
-| 需求 | 狀態 | 實作位置 |
-|------|------|----------|
-| 前端使用官方 Sui SDK | ✅ | `@mysten/dapp-kit` |
-| 支援至少兩種錢包 | ✅ | Slush Wallet + OKX Wallet |
-| 錢包連結前：顯示空白資訊卡 | ✅ | `WalletConnect.tsx` |
-| 錢包連結後：顯示錢包地址 | ✅ | `WalletConnect.tsx` |
-| 錢包連結後：顯示 SUI 餘額 | ✅ | `useSuiClientQuery('getBalance')` |
+### Bonus 1: zkLogin 無縫登入 ✅
 
----
+| 項目 | 說明 |
+|------|------|
+| **技術** | Enoki SDK + Google OAuth |
+| **功能** | 使用 Google 帳號登入，自動產生 Sui 錢包地址 |
+| **優勢** | 無需安裝錢包擴充套件，降低 Web3 入門門檻 |
 
-### UserStory 1-2：查詢特定錢包地址 (Mainnet)
+### Bonus 2: Walrus 去中心化儲存 ✅
 
-| 需求 | 狀態 | 實作位置 |
-|------|------|----------|
-| 有輸入框輸入錢包地址 | ✅ | `AddressQuery.tsx` |
-| 呼叫後端 API | ✅ | `GET /api/wallet/:address/balance` |
-| 後端用 Sui RPC/SDK 查詢 | ✅ | `sui.service.ts` |
-| 顯示 SUI 餘額 | ✅ | 前端顯示 `suiBalance` |
-| 顯示其他代幣及數量 | ✅ | 使用 `getCoinMetadata` |
-| 地址驗證 | ✅ | 區分錢包/合約/不存在地址 |
+| 項目 | 說明 |
+|------|------|
+| **技術** | Walrus Testnet + AES-256-GCM 加密 |
+| **功能** | 上傳/下載檔案至 Walrus 去中心化儲存網路 |
+| **加密** | 前端 AES-256-GCM 加密，支援密鑰備份與還原 |
 
-**範例錢包地址：**
-```
-0x1a66b986f6e938c9f6d4cf7b98c97c331165cad5759e13fbbb1dee01728841dd
-```
+### Bonus 3: DeepBook V3 去中心化交易所 ✅
 
-#### 地址驗證測試案例
+| 項目 | 說明 |
+|------|------|
+| **技術** | DeepBook V3 SDK |
+| **交易對** | DEEP/SUI (Testnet) |
+| **功能** | 即時訂單簿、市價買賣、真實鏈上交易 |
+| **最小交易量** | 10 DEEP（約 6.8 SUI） |
 
-| # | 測試地址 | 預期結果 | 說明 |
-|---|----------|----------|------|
-| 1 | `0xffdd5b4f84cd4d306d619f2a90c8698fc1e27cefa3b06a2aa31ce7eab4539e48` | ❌ 拒絕 | 合約/Package 地址 |
-| 2 | `0xffdd5b4f84cd4d306d619f2a90c8698fc1e27cefa3b06a2aa31ce7eab4539e49` | ❌ 拒絕 | 不存在的地址 |
-| 3 | `0x2efdc566ba6202175beda0aa70175bc90c5155d7d47ae90187b8e2010cf4df2a` | ✅ 允許 | 有效的錢包地址 |
-| 4 | `0x2efdc566ba6202175beda0aa70175bc90c5155d7d47ae90187b8e2010cf4df2` | ❌ 拒絕 | 格式錯誤 |
-| 5 | `123` | ❌ 拒絕 | 格式錯誤 |
+> ⚠️ **Note**: DeepBook pool 的 min_size = 10 DEEP，交易量太小會被拒絕。
 
----
+### Bonus 4: Bucket Protocol 儀表板 ✅
 
-### UserStory 3：讀取 Testnet Object 資料
-
-| 需求 | 狀態 | 實作位置 |
-|------|------|----------|
-| 後端固定連結 Testnet Object | ✅ | `.env` 中的 `TESTNET_OBJECT_ID` |
-| 顯示 Admin / Id / Balance | ✅ | `ObjectDisplay.tsx` |
-| 前端呼叫 API 顯示 | ✅ | `GET /api/object/fixed` |
-
-**固定 Object ID：**
-```
-0xeeb34a78eaf4ae873c679db294296778676de4a335f222856716d1ad6ed54e45
-```
+| 項目 | 說明 |
+|------|------|
+| **技術** | @bucket-protocol/sdk |
+| **網路** | Mainnet |
+| **功能** | 查詢 Vault、Position、PSM Pool、Oracle 價格 |
+| **說明** | Sui 原生 CDP 穩定幣協議，抵押資產借出 USDB |
 
 ---
 
-### UserStory 4：發送交易 (Testnet)
+### Bonus 功能技術架構
 
-| 需求 | 狀態 | 實作位置 |
-|------|------|----------|
-| 輸入目標地址 | ✅ | `TransferForm.tsx` |
-| 輸入轉帳金額 (Only SUI) | ✅ | 只支援 SUI |
-| 使用 Sui SDK 在前端發送交易 | ✅ | `useSignAndExecuteTransaction` |
-| 顯示交易哈希 | ✅ | `txResult.digest` |
-| 提供鏈上查看連結 | ✅ | `https://suiscan.xyz/testnet/tx/{digest}` |
+\`\`\`
+┌──────────────────────────────────────────────────────────────┐
+│                     Velella Dashboard                         │
+├──────────────────────────────────────────────────────────────┤
+│  zkLogin (Enoki)  │  Walrus + AES  │  DeepBook  │  Bucket    │
+│  ───────────────  │  ────────────  │  ────────  │  ───────── │
+│  Google OAuth     │  File Upload   │  Order Book│  CDP Query │
+│  Zero-Knowledge   │  256-bit Key   │  DEEP/SUI  │  Vault/PSM │
+│  Proof Login      │  Encrypted     │  Trading   │  Oracle    │
+└──────────────────────────────────────────────────────────────┘
+\`\`\`
 
 ---
 
@@ -203,46 +187,39 @@ velella-sui-app/
 
 #### 1. 安裝依賴
 
-```bash
+\`\`\`bash
 # 一次安裝所有依賴
 npm run install:all
 
 # 或分別安裝
 cd backend && npm install
 cd ../frontend && npm install
-```
+\`\`\`
 
 #### 2. 設定環境變數
 
-```bash
+\`\`\`bash
 cd backend
 cp .env.example .env
 # 編輯 .env 設定 RPC URL（可選）
-```
+\`\`\`
 
-#### 3. 放置 Logo 圖片
+#### 3. 啟動服務
 
-將 Velella logo 圖片放置於：
-```
-frontend/src/assets/velella-logo.png
-```
-
-#### 4. 啟動服務
-
-```bash
+\`\`\`bash
 # 同時啟動前後端
 npm run dev
 
 # 或分別啟動
 cd backend && npm run dev   # Terminal 1
 cd frontend && npm run dev  # Terminal 2
-```
+\`\`\`
 
-#### 5. 開啟瀏覽器
+#### 4. 開啟瀏覽器
 
-```
+\`\`\`
 http://localhost:3000
-```
+\`\`\`
 
 ---
 
@@ -250,7 +227,7 @@ http://localhost:3000
 
 ### 部署步驟
 
-```bash
+\`\`\`bash
 # 1. 安裝 Vercel CLI
 npm i -g vercel
 
@@ -263,15 +240,15 @@ vercel env add TESTNET_OBJECT_ID
 
 # 4. 部署
 vercel --prod
-```
+\`\`\`
 
 ### Vercel 設定
 
 | 設定 | 值 |
 |------|-----|
-| Build Command | `cd frontend && npm run build` |
-| Output Directory | `frontend/dist` |
-| Install Command | `npm install && cd frontend && npm install && cd ../backend && npm install` |
+| Build Command | \`cd frontend && npm run build\` |
+| Output Directory | \`frontend/dist\` |
+| Install Command | \`npm install && cd frontend && npm install && cd ../backend && npm install\` |
 
 ---
 
@@ -279,11 +256,10 @@ vercel --prod
 
 | 方法 | 路徑 | 說明 | 網路 |
 |------|------|------|------|
-| GET | `/api/health` | 健康檢查 | - |
-| GET | `/api/wallet/:address/validate` | 驗證地址 | Mainnet |
-| GET | `/api/wallet/:address/balance` | 查詢餘額 | Mainnet |
-| GET | `/api/object/fixed` | 固定 Object | Testnet |
-| GET | `/api/object/:objectId` | 動態 Object | Testnet |
+| GET | \`/api/wallet/:address/validate\` | 驗證地址 | Mainnet |
+| GET | \`/api/wallet/:address/balance\` | 查詢餘額 | Mainnet |
+| GET | \`/api/object/fixed\` | 固定 Object | Testnet |
+| GET | \`/api/object/:objectId\` | 動態 Object | Testnet |
 
 ---
 
@@ -291,81 +267,25 @@ vercel --prod
 
 | 變數 | 說明 | 預設值 |
 |------|------|--------|
-| `PORT` | Backend 服務埠 | 5000 |
-| `SUI_MAINNET_RPC_URL` | Mainnet RPC URL | 官方免費節點 |
-| `SUI_TESTNET_RPC_URL` | Testnet RPC URL | 官方免費節點 |
-| `TESTNET_OBJECT_ID` | 固定 Object ID | - |
+| \`PORT\` | Backend 服務埠 | 5000 |
+| \`SUI_MAINNET_RPC_URL\` | Mainnet RPC URL | 官方免費節點 |
+| \`SUI_TESTNET_RPC_URL\` | Testnet RPC URL | 官方免費節點 |
+| \`TESTNET_OBJECT_ID\` | 固定 Object ID | - |
+| \`ENOKI_API_KEY\` | Enoki API Key (zkLogin) | - |
+| \`GOOGLE_CLIENT_ID\` | Google OAuth Client ID | - |
 
 ---
 
-## 功能總覽
+## 代幣驗證狀態說明
 
-| UserStory | 功能 | 網路 | 狀態 |
-|-----------|------|------|------|
-| 1-1 | 連接錢包 + 顯示餘額 | Mainnet | ✅ |
-| 1-2 | 查詢任意地址餘額 + 代幣 | Mainnet | ✅ |
-| 3 | 讀取 Object 資料 | Testnet | ✅ |
-| 4 | 發送 SUI 轉帳交易 | Testnet | ✅ |
-
----
-
-## 🎁 Bonus 功能 (Advanced Sui Ecosystem)
-
-以下四個進階功能展示 Sui 生態系統的多元技術整合：
-
-### Bonus 1: zkLogin 無縫登入
-
-| 項目 | 說明 |
-|------|------|
-| **技術** | Enoki SDK + Google OAuth |
-| **功能** | 使用 Google 帳號登入，自動產生 Sui 錢包地址 |
-| **優勢** | 無需安裝錢包擴充套件，降低 Web3 入門門檻 |
-| **狀態** | ✅ 已整合 Enoki SDK，支援 zkLogin 流程 |
-
-### Bonus 2: Walrus 去中心化儲存
-
-| 項目 | 說明 |
-|------|------|
-| **技術** | Walrus Testnet + AES-256-GCM 加密 |
-| **功能** | 上傳/下載檔案至 Walrus 去中心化儲存網路 |
-| **加密** | 前端 AES-256-GCM 加密，支援密鑰備份與還原 |
-| **狀態** | ✅ 可運作（未來計畫整合 Seal 門檻加密） |
-
-> ⚠️ **Note**: 目前使用前端 AES-256-GCM 加密。Seal尚未整合。
-
-### Bonus 3: DeepBook V3 去中心化交易所
-
-| 項目 | 說明 |
-|------|------|
-| **技術** | DeepBook V3 SDK (@mysten/deepbook-v3) |
-| **功能** | 顯示 SUI/USDC 訂單簿深度、買賣報價、交易執行 |
-| **特色** | 即時顯示 SUI 與 USDC 餘額、買賣邏輯分離 |
-| **狀態** | 🔧 開發中（交易執行需進一步測試與除錯） |
-
-> ⚠️ **Note**: DeepBook 訂單簿讀取正常，交易執行可能因流動性或 Gas 問題失敗，需進一步排查。
-
-### Bonus 4: Nautilus 可信執行環境
-
-| 項目 | 說明 |
-|------|------|
-| **技術** | Nautilus TEE (Trusted Execution Environment) |
-| **功能** | 展示 TEE 可信計算概念 |
-| **狀態** | 🔧 開發中（需進一步檢查與整合） |
-
-> ⚠️ **Note**: Nautilus 功能尚在開發階段，需要進一步測試。
+| 狀態 | 圖示 | 說明 |
+|------|------|------|
+| 黑名單 (Scam) | 😈 scam | MystenLabs 官方認證的詐騙代幣 |
+| 白名單 (Verified) | 😇 verified | MystenLabs 官方認證的合法代幣 |
+| 未知 (Unknown) | 🤔 unknown | 不在黑白名單中的代幣 |
 
 ---
 
-### Bonus 功能技術架構
+## License
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Velella Dashboard                        │
-├─────────────────────────────────────────────────────────────┤
-│  zkLogin (Enoki)  │  Walrus + AES  │  DeepBook  │  Nautilus │
-│  ───────────────  │  ────────────  │  ────────  │  ──────── │
-│  Google OAuth     │  File Upload   │  Order Book│  TEE Demo │
-│  Zero-Knowledge   │  256-bit Key   │  SUI/USDC  │  Trusted  │
-│  Proof Login      │  Encrypted     │  Trading   │  Compute  │
-└─────────────────────────────────────────────────────────────┘
-```
+MIT

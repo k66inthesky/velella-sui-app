@@ -7,10 +7,10 @@ import TransferForm from './components/TransferForm'
 import ZkLoginKiosk from './components/ZkLoginKiosk'
 import WalrusUpload from './components/WalrusUpload'
 import DeepBookSwap from './components/DeepBookSwap'
-import PredictionMarket from './components/PredictionMarket'
+import BucketDashboard from './components/BucketDashboard'
 import logoImg from './assets/velella-logo.png'
 
-type TabType = 'wallet' | 'query' | 'object' | 'transfer' | 'zklogin' | 'walrus' | 'deepbook' | 'nautilus'
+type TabType = 'wallet' | 'query' | 'object' | 'transfer' | 'zklogin' | 'walrus' | 'deepbook' | 'bucket'
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('wallet')
@@ -18,11 +18,11 @@ function App() {
 
   // 根據 Tab 自動切換網路
   useEffect(() => {
-    if (activeTab === 'wallet' || activeTab === 'query') {
+    if (activeTab === 'wallet' || activeTab === 'query' || activeTab === 'bucket') {
       if (network !== 'mainnet') {
         selectNetwork('mainnet')
       }
-    } else if (activeTab === 'object' || activeTab === 'transfer' || activeTab === 'deepbook' || activeTab === 'nautilus') {
+    } else if (activeTab === 'object' || activeTab === 'transfer' || activeTab === 'deepbook') {
       if (network !== 'testnet') {
         selectNetwork('testnet')
       }
@@ -92,10 +92,10 @@ function App() {
           📊 DeepBook
         </button>
         <button 
-          className={`tab ${activeTab === 'nautilus' ? 'active' : ''}`}
-          onClick={() => setActiveTab('nautilus')}
+          className={`tab ${activeTab === 'bucket' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bucket')}
         >
-          🐚 Nautilus
+          🪣 Bucket
         </button>
       </div>
 
@@ -106,7 +106,7 @@ function App() {
       {activeTab === 'zklogin' && <ZkLoginKiosk />}
       {activeTab === 'walrus' && <WalrusUpload />}
       {activeTab === 'deepbook' && <DeepBookSwap />}
-      {activeTab === 'nautilus' && <PredictionMarket />}
+      {activeTab === 'bucket' && <BucketDashboard />}
     </div>
   )
 }
