@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/a773a1a3-553e-472e-b353-64654aff4174
 
 ## 專案結構
 
-\`\`\`
+```
 velella-sui-app/
 ├── package.json                    # 根目錄 package.json（Vercel 部署用）
 ├── vercel.json                     # Vercel 配置
@@ -83,7 +83,7 @@ velella-sui-app/
         │   └── object.controller.ts
         └── services/
             └── sui.service.ts     # Sui SDK 服務層
-\`\`\`
+```
 
 ---
 
@@ -93,11 +93,11 @@ velella-sui-app/
 
 | 顏色 | 用途 |
 |------|------|
-| \`#00b4d8\` | 主色 (Ocean Blue) |
-| \`#48cae4\` | 淺藍 (Light Blue) |
-| \`#0077b6\` | 深藍 (Deep Ocean) |
-| \`#0a1628\` | 背景 (Dark Navy) |
-| \`#e8f4f8\` | 文字 (Light Text) |
+| `#00b4d8` | 主色 (Ocean Blue) |
+| `#48cae4` | 淺藍 (Light Blue) |
+| `#0077b6` | 深藍 (Deep Ocean) |
+| `#0a1628` | 背景 (Dark Navy) |
+| `#e8f4f8` | 文字 (Light Text) |
 
 特色：
 - 🌊 深邃的海洋藍背景
@@ -167,7 +167,7 @@ velella-sui-app/
 
 ### Bonus 功能技術架構
 
-\`\`\`
+```
 ┌──────────────────────────────────────────────────────────────┐
 │                     Velella Dashboard                         │
 ├──────────────────────────────────────────────────────────────┤
@@ -177,7 +177,7 @@ velella-sui-app/
 │  Zero-Knowledge   │  256-bit Key   │  DEEP/SUI  │  Vault/PSM │
 │  Proof Login      │  Encrypted     │  Trading   │  Oracle    │
 └──────────────────────────────────────────────────────────────┘
-\`\`\`
+```
 
 ---
 
@@ -187,39 +187,39 @@ velella-sui-app/
 
 #### 1. 安裝依賴
 
-\`\`\`bash
+```bash
 # 一次安裝所有依賴
 npm run install:all
 
 # 或分別安裝
 cd backend && npm install
 cd ../frontend && npm install
-\`\`\`
+```
 
 #### 2. 設定環境變數
 
-\`\`\`bash
+```bash
 cd backend
 cp .env.example .env
 # 編輯 .env 設定 RPC URL（可選）
-\`\`\`
+```
 
 #### 3. 啟動服務
 
-\`\`\`bash
+```bash
 # 同時啟動前後端
 npm run dev
 
 # 或分別啟動
 cd backend && npm run dev   # Terminal 1
 cd frontend && npm run dev  # Terminal 2
-\`\`\`
+```
 
 #### 4. 開啟瀏覽器
 
-\`\`\`
+```
 http://localhost:3000
-\`\`\`
+```
 
 ---
 
@@ -227,7 +227,7 @@ http://localhost:3000
 
 ### 部署步驟
 
-\`\`\`bash
+```bash
 # 1. 安裝 Vercel CLI
 npm i -g vercel
 
@@ -240,15 +240,15 @@ vercel env add TESTNET_OBJECT_ID
 
 # 4. 部署
 vercel --prod
-\`\`\`
+```
 
 ### Vercel 設定
 
 | 設定 | 值 |
 |------|-----|
-| Build Command | \`cd frontend && npm run build\` |
-| Output Directory | \`frontend/dist\` |
-| Install Command | \`npm install && cd frontend && npm install && cd ../backend && npm install\` |
+| Build Command | `cd frontend && npm run build` |
+| Output Directory | `frontend/dist` |
+| Install Command | `npm install && cd frontend && npm install && cd ../backend && npm install` |
 
 ---
 
@@ -256,10 +256,10 @@ vercel --prod
 
 | 方法 | 路徑 | 說明 | 網路 |
 |------|------|------|------|
-| GET | \`/api/wallet/:address/validate\` | 驗證地址 | Mainnet |
-| GET | \`/api/wallet/:address/balance\` | 查詢餘額 | Mainnet |
-| GET | \`/api/object/fixed\` | 固定 Object | Testnet |
-| GET | \`/api/object/:objectId\` | 動態 Object | Testnet |
+| GET | `/api/wallet/:address/validate` | 驗證地址 | Mainnet |
+| GET | `/api/wallet/:address/balance` | 查詢餘額 | Mainnet |
+| GET | `/api/object/fixed` | 固定 Object | Testnet |
+| GET | `/api/object/:objectId` | 動態 Object | Testnet |
 
 ---
 
@@ -267,12 +267,12 @@ vercel --prod
 
 | 變數 | 說明 | 預設值 |
 |------|------|--------|
-| \`PORT\` | Backend 服務埠 | 5000 |
-| \`SUI_MAINNET_RPC_URL\` | Mainnet RPC URL | 官方免費節點 |
-| \`SUI_TESTNET_RPC_URL\` | Testnet RPC URL | 官方免費節點 |
-| \`TESTNET_OBJECT_ID\` | 固定 Object ID | - |
-| \`ENOKI_API_KEY\` | Enoki API Key (zkLogin) | - |
-| \`GOOGLE_CLIENT_ID\` | Google OAuth Client ID | - |
+| `PORT` | Backend 服務埠 | 5000 |
+| `SUI_MAINNET_RPC_URL` | Mainnet RPC URL | 官方免費節點 |
+| `SUI_TESTNET_RPC_URL` | Testnet RPC URL | 官方免費節點 |
+| `TESTNET_OBJECT_ID` | 固定 Object ID | - |
+| `ENOKI_API_KEY` | Enoki API Key (zkLogin) | - |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | - |
 
 ---
 
